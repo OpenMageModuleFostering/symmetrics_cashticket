@@ -1,12 +1,37 @@
 <?php
 /**
- * @category Symmetrics
- * @package Symmetrics_CashTicket
- * @author symmetrics gmbh <info@symmetrics.de>, Eugen Gitin <eg@symmetrics.de>
- * @copyright symmetrics gmbh
- * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Open Software License (OSL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/osl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magentocommerce.com so we can send you a copy immediately.
+ *
+ * @category  Symmetrics
+ * @package   Symmetrics_CashTicket
+ * @author    symmetrics gmbh <info@symmetrics.de>
+ * @author    Eugen Gitin <eg@symmetrics.de>
+ * @copyright 2010 symmetrics gmbh
+ * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @link      http://www.symmetrics.de/
  */
 
+/**
+ * Symmetrics_CashTicket_Adminhtml_CashticketController
+ *
+ * @category  Symmetrics
+ * @package   Symmetrics_CashTicket
+ * @author    symmetrics gmbh <info@symmetrics.de>
+ * @author    Eugen Gitin <eg@symmetrics.de>
+ * @copyright 2010 symmetrics gmbh
+ * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * @link      http://www.symmetrics.de/
+*/
 class Symmetrics_CashTicket_Adminhtml_CashticketController extends Mage_Adminhtml_Controller_Action
 {
     /**
@@ -31,7 +56,9 @@ class Symmetrics_CashTicket_Adminhtml_CashticketController extends Mage_Adminhtm
         // if entered amount is less then zero by modifying transaction
         if ($amount <= 0 && $action == 'modify') {
             // return error message
-            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cashticket')->__('Debit amount must be greater then zero.'));
+            $message = 'Debit amount must be greater then zero.';
+            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cashticket')->__($message));
+            
             return $this;
         }
         
@@ -40,7 +67,9 @@ class Symmetrics_CashTicket_Adminhtml_CashticketController extends Mage_Adminhtm
             // get disposition state from Cash-Ticket
             $response = $api->call('GetDispositionState', array());
             // if allow to debit
+            // @codingStandardsIgnoreStart
             if (is_object($response) && $response->errCode == '0' && $response->Amount > 0 && $response->TransactionState == 'D') {
+            // @codingStandardsIgnoreEnd
                     $params = array(
                         'amount' => $amount,
                         'close' => '0',
@@ -49,38 +78,48 @@ class Symmetrics_CashTicket_Adminhtml_CashticketController extends Mage_Adminhtm
                     $debitResponse = $api->call('Debit', $params);
                     if ($debitResponse->errCode == '0') {
                         // if everything was ok - save the new status and add info to order history
-                        $order->addStatusToHistory(Mage_Sales_Model_Order::STATE_PROCESSING, sprintf(Mage::helper('cashticket')->__('Amount %s %s was successfully captured from customers Cash-Tickets.'), $amount, $api->getCurrency()));
+                        $statusMessage = 'Amount %s %s was successfully captured from customers Cash-Tickets.';
+                        $status = Mage::helper('cashticket')->__($statusMessage, $amount, $api->getCurrency());
+                        $order->addStatusToHistory(Mage_Sales_Model_Order::STATE_PROCESSING, $status);
                         $order->save();
-    
-                        Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('cashticket')->__(sprintf(Mage::helper('cashticket')->__('Amount of %s %s was successfully debited.'), $amount, $api->getCurrency())));
+                        $successMessage = 'Amount of %s %s was successfully debited.';
+                        $success = Mage::helper('cashticket')->__($successMessage, $amount, $api->getCurrency());
+                        Mage::getSingleton('adminhtml/session')->addSuccess($success);
                         return $this;
-                    }
-                    else {
+                    } else {
                         $errorMessage = preg_replace('/&/', '', $debitResponse->errMessage);
                         $errorMessage = preg_replace('/;/', '', $errorMessage);
                         Mage::getSingleton('adminhtml/session')->addError($errorMessage);
                         return $this;
                     }
-            }
-            else {
+            } else {
                 // if can not process debit
-                Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cashticket')->__('Error processing the Cash-Ticket request.'));
+                $errorString = 'Error processing the Cash-Ticket request.';
+                $error = Mage::helper('cashticket')->__($errorString);
+                Mage::getSingleton('adminhtml/session')->addError($error);
                 return $this;
             }
-        }
-        elseif ($action == 'modify') {
+        } elseif ($action == 'modify') {
             // call Cash-Ticket modify function and modify the transaction amount
-            $response = $api->call('ModifyDisposition', array('amount' => $amount));
+            $response = $api->call(
+                'ModifyDisposition', 
+                array(
+                    'amount' => $amount
+                )
+            );
 
             if (is_object($response) && $response->errCode == '0') {
                 // if everything was ok - save the new status and add info to order history 
-                $order->addStatusToHistory(Mage_Sales_Model_Order::STATE_PROCESSING, sprintf('Disposition modified. New value: %s %s', $amount, $api->getCurrency()));
+                $statusString = sprintf('Disposition modified. New value: %s %s', $amount, $api->getCurrency());
+                $order->addStatusToHistory(Mage_Sales_Model_Order::STATE_PROCESSING, $statusString);
                 $order->save();
-                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('cashticket')->__(sprintf('Disposition was successfully modified (%s %s).', $amount, $api->getCurrency())));
+                $successMessage = 'Disposition was successfully modified (%s %s).';
+                $success = Mage::helper('cashticket')->__($successMessage, $amount, $api->getCurrency());
+                Mage::getSingleton('adminhtml/session')->addSuccess($success);
                 return $this;
-            }
-            else {
-                Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cashticket')->__('Error processing the Cash-Ticket request.'));
+            } else {
+                $errorMessage = Mage::helper('cashticket')->__('Error processing the Cash-Ticket request.');
+                Mage::getSingleton('adminhtml/session')->addError($errorMessage);
                 return $this;
             }
         }
@@ -91,6 +130,8 @@ class Symmetrics_CashTicket_Adminhtml_CashticketController extends Mage_Adminhtm
     /**
      * Get order object and load 
      * order by id
+     *
+     * @param int $orderId Order id
      *
      * @return object
      */    
@@ -105,6 +146,8 @@ class Symmetrics_CashTicket_Adminhtml_CashticketController extends Mage_Adminhtm
     /**
      * Get API object and set 
      * the transaction
+     *
+     * @param int $transactionId Transaction Id
      *
      * @return object
      */

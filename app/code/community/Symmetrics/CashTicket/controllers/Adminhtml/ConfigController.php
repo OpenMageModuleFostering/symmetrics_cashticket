@@ -1,37 +1,12 @@
 <?php
 /**
- * Magento
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
- *
- * @category  Symmetrics
- * @package   Symmetrics_CashTicket
- * @author    symmetrics gmbh <info@symmetrics.de>
- * @author    Eugen Gitin <eg@symmetrics.de>
- * @copyright 2010 symmetrics gmbh
- * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
- * @link      http://www.symmetrics.de/
+ * @category Symmetrics
+ * @package Symmetrics_CashTicket
+ * @author symmetrics gmbh <info@symmetrics.de>, Eugen Gitin <eg@symmetrics.de>
+ * @copyright symmetrics gmbh
+ * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-/**
- * Symmetrics_CashTicket_Adminhtml_ConfigController
- *
- * @category  Symmetrics
- * @package   Symmetrics_CashTicket
- * @author    symmetrics gmbh <info@symmetrics.de>
- * @author    Eugen Gitin <eg@symmetrics.de>
- * @copyright 2010 symmetrics gmbh
- * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
- * @link      http://www.symmetrics.de/
-*/
 class Symmetrics_CashTicket_Adminhtml_ConfigController extends Mage_Adminhtml_Controller_Action
 {
     /**
@@ -43,10 +18,7 @@ class Symmetrics_CashTicket_Adminhtml_ConfigController extends Mage_Adminhtml_Co
     {
         $this->loadLayout()
             ->_setActiveMenu('cashticket/items')
-            ->_addBreadcrumb(
-                Mage::helper('adminhtml')->__('Items Manager'), 
-                Mage::helper('adminhtml')->__('Item Manager')
-            );
+            ->_addBreadcrumb(Mage::helper('adminhtml')->__('Items Manager'), Mage::helper('adminhtml')->__('Item Manager'));
 
         return $this;
     }
@@ -95,24 +67,18 @@ class Symmetrics_CashTicket_Adminhtml_ConfigController extends Mage_Adminhtml_Co
             $this->loadLayout();
             $this->_setActiveMenu('cashticket/items');
 
-            $this->_addBreadcrumb(
-                Mage::helper('adminhtml')->__('Item Manager'), 
-                Mage::helper('adminhtml')->__('Item Manager')
-            );
-            $this->_addBreadcrumb(
-                Mage::helper('adminhtml')->__('Item News'), 
-                Mage::helper('adminhtml')->__('Item News')
-            );
+            $this->_addBreadcrumb(Mage::helper('adminhtml')->__('Item Manager'), Mage::helper('adminhtml')->__('Item Manager'));
+            $this->_addBreadcrumb(Mage::helper('adminhtml')->__('Item News'), Mage::helper('adminhtml')->__('Item News'));
 
             $this->getLayout()->getBlock('head')->setCanLoadExtJs(true);
 
             $this->_addContent($this->getLayout()->createBlock('cashticket/adminhtml_config_edit'));
 
             $this->renderLayout();
-        } else {
+        }
+        else {
             // otherwise show error
-            $error = Mage::helper('cashticket')->__('Item does not exist');
-            Mage::getSingleton('adminhtml/session')->addError($error);
+            Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cashticket')->__('Item does not exist'));
             $this->_redirect('*/*/');   
         }
     }
@@ -120,7 +86,7 @@ class Symmetrics_CashTicket_Adminhtml_ConfigController extends Mage_Adminhtml_Co
     /**
      * Save form action
      *
-     * @return void
+     * @return
      */
     public function saveAction()
     {
@@ -142,52 +108,48 @@ class Symmetrics_CashTicket_Adminhtml_ConfigController extends Mage_Adminhtml_Co
                 // if there are already saved active config items
                 if ($size > 0 && $ids[0] != $model->getItemId()) {
                     // throw error
-                    $errorMessage = 'You have already an active configuration for currency %s.';
-                    $error = Mage::helper('cashticket')->__($errorMessage, $model->getCurrencyCode());
-                    Mage::throwException($error);                
+                    Mage::throwException(Mage::helper('cashticket')->__(sprintf('You have already an active configuration for currency %s.', $model->getCurrencyCode())));                
                 }
                 
                 // set update and creation time to now if saving the new item
                 if ($model->getCreatedTime == NULL || $model->getUpdateTime() == NULL) {
                     $model->setCreatedTime(now())->setUpdateTime(now());
-                } else {
+                }
+                else {
                     $model->setUpdateTime(now());
                 }
 
                 $model->save();
 
                 // add success message
-                $successMessage = 'Configuration for %s was successfully saved';
-                $success = Mage::helper('cashticket')->__($successMessage, $model->getData('currency_code'));
-                Mage::getSingleton('adminhtml/session')->addSuccess($success);
+                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('cashticket')->__(sprintf('Configuration for %s was successfully saved', $model->getData('currency_code'))));
                 Mage::getSingleton('adminhtml/session')->setFormData(false);
 
                 // if save and continue
                 if ($this->getRequest()->getParam('back')) {
                     // redirect to the edit form with the same id
                     $this->_redirect('*/*/edit', array('id' => $model->getId()));
-                    return true;
+                    return;
                 }
 
                 $this->_redirect('*/*/');
-                return true;
+                return;
                 
             } catch (Exception $e) {
                 Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
                 Mage::getSingleton('adminhtml/session')->setFormData($data);
                 $this->_redirect('*/*/edit', array('id' => $this->getRequest()->getParam('item_id')));
-                return false;
+                return;
             }
         }
-        $errorMessage = Mage::helper('cashticket')->__('Unable to find item to save');
-        Mage::getSingleton('adminhtml/session')->addError($errorMessage);
+        Mage::getSingleton('adminhtml/session')->addError(Mage::helper('cashticket')->__('Unable to find item to save'));
         $this->_redirect('*/*/');
     }
 
     /**
      * Delete action
      *
-     * @return void
+     * @return
      */
     public function deleteAction()
     {
@@ -198,8 +160,7 @@ class Symmetrics_CashTicket_Adminhtml_ConfigController extends Mage_Adminhtml_Co
                 $model = Mage::getModel('cashticket/item');
                 $model->setId($this->getRequest()->getParam('id'))
                     ->delete();
-                $success = Mage::helper('adminhtml')->__('Item was successfully deleted');
-                Mage::getSingleton('adminhtml/session')->addSuccess($success);
+                Mage::getSingleton('adminhtml/session')->addSuccess(Mage::helper('adminhtml')->__('Item was successfully deleted'));
                 $this->_redirect('*/*/');
             } catch (Exception $e) {
                 Mage::getSingleton('adminhtml/session')->addError($e->getMessage());

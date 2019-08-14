@@ -1,37 +1,12 @@
 <?php
 /**
- * Magento
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Open Software License (OSL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/osl-3.0.php
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@magentocommerce.com so we can send you a copy immediately.
- *
- * @category  Symmetrics
- * @package   Symmetrics_CashTicket
- * @author    symmetrics gmbh <info@symmetrics.de>
- * @author    Eugen Gitin <eg@symmetrics.de>
- * @copyright 2010 symmetrics gmbh
- * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
- * @link      http://www.symmetrics.de/
+ * @category Symmetrics
+ * @package Symmetrics_CashTicket
+ * @author symmetrics gmbh <info@symmetrics.de>, Eugen Gitin <eg@symmetrics.de>
+ * @copyright symmetrics gmbh
+ * @license http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-/**
- * Symmetrics_CashTicket_Model_CashTicket
- *
- * @category  Symmetrics
- * @package   Symmetrics_CashTicket
- * @author    symmetrics gmbh <info@symmetrics.de>
- * @author    Eugen Gitin <eg@symmetrics.de>
- * @copyright 2010 symmetrics gmbh
- * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
- * @link      http://www.symmetrics.de/
-*/
 class Symmetrics_CashTicket_Model_CashTicket extends Mage_Payment_Model_Method_Abstract
 {
     /**
@@ -140,11 +115,6 @@ class Symmetrics_CashTicket_Model_CashTicket extends Mage_Payment_Model_Method_A
      */
     protected $_transactionId = '';
 
-    /**
-     * Construct
-     *
-     * @return void
-     */
     public function _construct()
     {
         parent::_construct();
@@ -153,8 +123,6 @@ class Symmetrics_CashTicket_Model_CashTicket extends Mage_Payment_Model_Method_A
     
     /**
      * Get API object
-     *
-     * @param int $transactionId Transaction Id
      *
      * @return object
      */
@@ -174,7 +142,7 @@ class Symmetrics_CashTicket_Model_CashTicket extends Mage_Payment_Model_Method_A
      */
     public function getCheckout()
     {
-        return Mage::getSingleton('checkout/session');
+        return Mage::getModel('checkout/session');
     }
     
     /**
@@ -184,7 +152,7 @@ class Symmetrics_CashTicket_Model_CashTicket extends Mage_Payment_Model_Method_A
      */
     public function getSession()
     {
-        return Mage::getSingleton('cashticket/session');
+        return Mage::getModel('cashticket/session');
     }
     
     /**
@@ -200,8 +168,6 @@ class Symmetrics_CashTicket_Model_CashTicket extends Mage_Payment_Model_Method_A
     /**
      * Check if payment method is available
      *
-     * @param object $quote Quote
-     *
      * @return bool
      */
     public function isAvailable($quote = null)
@@ -209,10 +175,6 @@ class Symmetrics_CashTicket_Model_CashTicket extends Mage_Payment_Model_Method_A
         // if quote is not set - something went wrong
         if (is_null($quote)) {
            return false;
-        }
-        
-        if (!Mage::getStoreConfigFlag('payment/cashticket/active')) {
-            return false;
         }
 
         // if cart value > 1000 - cancel
@@ -227,9 +189,6 @@ class Symmetrics_CashTicket_Model_CashTicket extends Mage_Payment_Model_Method_A
 
     /**
      * Create disposition on Cash-Ticket
-     *
-     * @param Varien_Object $payment Payment Object
-     * @param int           $amount  Amount
      *
      * @return object
      */
@@ -251,19 +210,16 @@ class Symmetrics_CashTicket_Model_CashTicket extends Mage_Payment_Model_Method_A
         $payment->setAdditionalData($transactionId);
         
         // get response from api
-        $response = $api->call(
-            'CreateDisposition', 
-            $params
-        );
+        $response = $api->call('CreateDisposition', $params);
 
         // if response could be parsed and no error happened
-        if (is_object($response) && $response->errCode == '0') {
+        if (is_object($response) && $response->errCode == '0')
+        {
             return $this;
-        } else {
-            $message = 'There is an error occurred. Probably it`s a temporary error and ';
-            $message .= 'the payment can be finished by a site reload. If this problem exist further, ';
-            $message .= 'please contact our support.';
-            Mage::throwException(Mage::helper('cashticket')->__($message));
+        }
+        else {
+            // TODO: Translate
+            Mage::throwException(Mage::helper('cashticket')->__('Bei der Bezahlung ist ein Fehler aufgetreten. Vermutlich ist dies ein temporärer Fehler und die Bezahlung kann durch Neu-Laden der Seite abgeschlossen werden. Falls dieses Problem weiterhin besteht, kontaktieren Sie bitte unseren Support.'));
         }
         
         return $this;

@@ -1,16 +1,19 @@
 {
-    "name": "OpenMageModuleFostering/symmetrics_cashticket",
+    "name": "OpenMageModuleFostering\/symmetrics_cashticket",
     "type": "magento-module",
     "license": "OSL-3.0",
     "homepage": "",
     "description": "Payment Gateway Cash-Ticket",
     "authors": [
-    {
-        "name": "Boris Lokschin",
-        "email": "bl@symmetrics.de"
-    }
-],
+        {
+            "name": "Boris Lokschin",
+            "email": "bl@symmetrics.de"
+        }
+    ],
     "suggest": {
-        "magento-hackathon/magento-composer-installer": "*"
-    }
+        "magento-hackathon\/magento-composer-installer": "*"
+    },
+    "keywords": [
+        "openmage-module"
+    ]
 }
